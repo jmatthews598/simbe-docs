@@ -1,0 +1,238 @@
+---
+title: 'Standard Price'
+description: 'Learn about Feedback Loops for Standard Price exceptions and how to suppress incorrect pricing data from reporting and analytics'
+---
+
+The Feedback Loops - Price flow enables teams to suppress incorrect pricing data from reporting and analytics, reducing noise and increasing trust in price discrepancy reporting.
+
+## How It Works
+
+<Steps>
+<Step title="Enable the Service">
+  Add FEEDBACK_LOOPS_PRICE to the list of enabled services for the store or retailer in your configuration. This activates price exception workflows across Simbe.ai and the mobile app.
+  
+  <Info>
+  FEEDBACK_LOOPS_PRICE can be added at the store or retailer level.
+  </Info>
+</Step>
+
+<Step title="Flag False Positives">
+  Users can flag false positives using the Simbe mobile app OR web-based task reports. These are cases where a detected standard price doesn't match the standard price data ingested from the retailer.
+</Step>
+
+<Step title="Review Exceptions">
+  Flagged products appear in the Product Exception Management table (Retailer > Store > Feedback Loops Tab). Each entry includes:
+  
+  - Product ID
+  - Scene
+  - Expected price when the tag was detected
+  - When reporting suppression started
+  - Exception type
+  
+  <Info>
+  Currently available exception types:
+  - **Price Change**: Suppression remains active unless a retailer uploads a new price
+  - **Permanent Change**: Requires users to manually remove suppression
+  
+  All exceptions can be removed by clicking the "X" button.
+  </Info>
+</Step>
+</Steps>
+
+## Exception Types
+
+<AccordionGroup>
+<Accordion title="Price Change">
+  **Behavior**: Suppression remains active unless a retailer uploads a new price
+  
+  **Use Case**: Temporary price discrepancies that will be resolved when retailer data is updated
+  
+  **Resolution**: Automatic when new price data is ingested
+</Accordion>
+
+<Accordion title="Permanent Change">
+  **Behavior**: Requires users to manually remove suppression
+  
+  **Use Case**: Persistent price discrepancies that need ongoing manual oversight
+  
+  **Resolution**: Manual removal by authorized users
+</Accordion>
+</AccordionGroup>
+
+## Monitoring and Reporting
+
+### Exception Management Table
+
+The Product Exception Management table provides a centralized view of all price exceptions across your stores. Access it through:
+
+**Navigation Path**: Retailer > Store > Feedback Loops Tab
+
+**Table Columns**:
+- Product ID
+- Scene
+- Expected price when detected
+- Reporting suppression start date
+- Exception type
+- Action buttons (remove exception)
+
+### Dashboard Integration
+
+<Info>
+The following dashboard can be used to monitor the volume of pricetags that are suppressed from reporting.
+</Info>
+
+<Card title="Price Exception Dashboard" icon="chart">
+  Monitor the volume and trends of price exceptions across your retail network.
+  
+  **Metrics tracked**:
+  - Total exceptions by store
+  - Exception resolution rates
+  - Price change vs. permanent change breakdown
+  - Time to resolution trends
+</Card>
+
+## Best Practices
+
+### Exception Management
+
+1. **Regular Review**: Schedule weekly reviews of the Feedback Loops table to ensure exceptions are current
+2. **Data Validation**: Verify that flagged exceptions are truly false positives before suppression
+3. **Resolution Tracking**: Monitor how long exceptions remain active and follow up on long-standing cases
+4. **Team Training**: Ensure all users understand the difference between Price Change and Permanent Change types
+
+### Service Configuration
+
+<Warning>
+Only enable FEEDBACK_LOOPS_PRICE for stores where you have reliable price data ingestion and audit processes in place.
+</Warning>
+
+- **Store-level**: Enable for individual stores during initial setup or troubleshooting
+- **Retailer-level**: Enable across all stores for consistent price exception handling
+- **Service Dependencies**: Ensure price data ingestion services are functioning properly
+
+## Troubleshooting
+
+### Common Issues
+
+<AccordionGroup>
+<Accordion title="Exceptions Not Appearing">
+  **Possible Causes**:
+  - FEEDBACK_LOOPS_PRICE service not enabled
+  - User permissions insufficient
+  - Price data ingestion issues
+  
+  **Resolution Steps**:
+  1. Verify FEEDBACK_LOOPS_PRICE is enabled for the store/retailer
+  2. Check user access permissions
+  3. Validate price data ingestion pipeline
+</Accordion>
+
+<Accordion title="Exceptions Not Resolving">
+  **Possible Causes**:
+  - Price Change exceptions waiting for retailer data updates
+  - Permanent Change exceptions requiring manual removal
+  
+  **Resolution Steps**:
+  1. Check exception type to understand resolution path
+  2. For Price Change: verify retailer data update timeline
+  3. For Permanent Change: manually remove when appropriate
+</Accordion>
+
+<Accordion title="Mobile App Flagging Issues">
+  **Possible Causes**:
+  - App version compatibility
+  - Network connectivity issues
+  - User authentication problems
+  
+  **Resolution Steps**:
+  1. Update mobile app to latest version
+  2. Check network connectivity
+  3. Re-authenticate user session
+</Accordion>
+</AccordionGroup>
+
+### Support Contacts
+
+For technical issues with Feedback Loops Price:
+
+- **Engineering Team**: For service configuration and technical problems
+- **Customer Success**: For user training and process questions
+- **Data Operations**: For price data ingestion and quality issues
+
+## Integration Points
+
+### Mobile Application
+
+The Simbe mobile app provides field teams with the ability to flag price exceptions in real-time:
+
+- **Flag False Positives**: Mark incorrect price detections during store visits
+- **Exception Review**: View and manage active exceptions for assigned stores
+- **Offline Support**: Queue exceptions when network connectivity is limited
+
+### Web Interface
+
+The web-based task reports provide additional access to price exception management:
+
+- **Bulk Operations**: Handle multiple exceptions efficiently
+- **Detailed Views**: Access comprehensive exception information
+- **Reporting Tools**: Generate exception reports and analytics
+
+### API Access
+
+<Info>
+API endpoints for programmatic access to price exception data are available for advanced integrations and custom reporting.
+</Info>
+
+## Future Enhancements
+
+### Planned Features
+
+<AccordionGroup>
+<Accordion title="Automated Resolution">
+  **Description**: AI-powered analysis to automatically resolve common price exceptions
+  
+  **Timeline**: Q3 2024
+  
+  **Benefits**: Reduced manual intervention, faster resolution times
+</Accordion>
+
+<Accordion title="Advanced Analytics">
+  **Description**: Enhanced reporting and trend analysis for price exceptions
+  
+  **Timeline**: Q4 2024
+  
+  **Benefits**: Better insights into pricing accuracy patterns
+</Accordion>
+
+<Accordion title="Integration with Retailer Systems">
+  **Description**: Direct integration with retailer price management systems
+  
+  **Timeline**: 2025
+  
+  **Benefits**: Real-time price synchronization, reduced exception volume
+</Accordion>
+</AccordionGroup>
+
+## Implementation Considerations
+
+### Service Dependencies
+
+Before enabling FEEDBACK_LOOPS_PRICE, ensure these services are operational:
+
+- **Price Data Ingestion**: Reliable pipeline for receiving retailer price updates
+- **Audit Workflow**: Processes for reviewing and validating price exceptions
+- **User Management**: Proper access controls for exception management
+
+### Performance Impact
+
+- **Storage**: Exception data is stored per product-scene combination
+- **Processing**: Real-time evaluation of price discrepancies
+- **Reporting**: Automatic suppression of flagged items from analytics
+
+### Rollout Strategy
+
+1. **Pilot Phase**: Enable for a single store to validate workflow
+2. **Expansion**: Gradually roll out to additional stores
+3. **Full Deployment**: Enable across all stores once validated
+
+[← Back to Feedback Loops Overview](/internal/services/feedback-loops/overview)

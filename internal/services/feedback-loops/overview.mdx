@@ -1,0 +1,59 @@
+---
+title: 'Overview'
+description: "Learn about Simbe's unified framework for catching, suppressing, and resolving product-level data inaccuracies"
+---
+
+Feedback Loops is Simbe's unified framework for catching, suppressing, and resolving product-level data inaccuracies before they reach customer analytics. Feedback Loops uses an intelligent product-level audit workflow to accelerate store onboarding, reduce audit burden, and preserve trust in every metric we publish.
+
+Two specialized flows—Feedback Loops for Out-On-Shelf and Feedback Loops for Standard Price—extend this framework to our two primary data domains: standard price exceptions and out on shelf detections.
+
+## What Are Feedback Loops?
+
+Feedback Loops create intelligent, automated workflows that learn from audits and customer feedback to continuously improve data quality. The system builds confidence in product-level detections by analyzing historical patterns over time.
+
+The system maintains a running history of detection accuracy for each product, requiring multiple consistent observations (typically 3 out of 5 recent audits) before elevating a product to "confident" status. When customers report false positives, this feedback immediately triggers re-evaluation and can demote products to lower confidence levels. Product confidence is dynamic and adapts based on new information, creating a continuously improving system that builds on its past experiences.
+
+## Key Benefits
+
+- **Accelerated Onboarding**: New stores can go live faster with intelligent audit routing
+- **Reduced Manual Work**: Automated suppression of low-confidence detections
+- **Continuous Improvement**: System learns from corrections to improve future accuracy
+- **Trusted Analytics**: Only high-confidence data reaches customer reporting
+
+## How It Works
+
+### 1. Detection & Flagging
+Computer vision systems detect potential issues (price mismatches, out-of-stock items) and flag them for review.
+
+### 2. Historical Confidence Assessment
+The system evaluates each detection against the product's historical performance, including past audit outcomes and customer feedback patterns.
+
+### 3. Intelligent Routing
+Based on confidence levels built from historical data, the system automatically routes low-confidence items to human auditors while allowing high-confidence detections to bypass review.
+
+### 4. Continuous Learning & Feedback Integration
+Every audit outcome and customer feedback is recorded and integrated into the product's confidence history, creating a continuously improving system that builds on its past experiences.
+
+## Two Main Workflows
+
+### [Feedback Loops for Out on Shelf](/internal/services/feedback-loops/out-on-shelf)
+Manages shelf availability detections by tracking product-level accuracy. Products start in "review" status during onboarding and graduate to "confident" status after demonstrating consistent accuracy (3/5 recent audits are accurate). The system continuously learns from user feedback and audit corrections to improve detection quality.
+
+### [Feedback Loops for Standard Price](/internal/services/feedback-loops/standard-price)
+Handles price discrepancy exceptions, enabling teams to suppress incorrect pricing data from reporting and analytics.
+
+## Getting Started
+
+To use Feedback Loops in your stores:
+
+1. **Enable Services**: Add the appropriate Feedback Loops services to your store configuration
+2. **Train Your Team**: Ensure auditors understand the new workflow and tools
+3. **Monitor Performance**: Use the available dashboards to track system performance and improvements
+
+## Learn More
+
+- [Out on Shelf Workflow Details](/internal/services/feedback-loops/out-on-shelf)
+- [Price Exception Management](/internal/services/feedback-loops/standard-price)
+- [Development Guide](/development)
+
+[← Back to Overview](/overview)

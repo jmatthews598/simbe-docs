@@ -1,22 +1,24 @@
 ---
 title: 'Out on Shelf'
-description: 'Learn about Feedback Loops for Out on Shelf exceptions and how the system tracks product-level detection accuracy'
+description: 'Learn about Feedback Loops for Out on Shelf detections and how the system tracks product-level detection accuracy with automated confidence management'
 ---
 
-Feedback Loops for Out on Shelf helps improve detection accuracy by tracking how well our computer vision system identifies products that are out of stock or on the shelf. The system focuses on two key metrics:
+## What It Does & Benefits
 
-- **Recall**: Did we detect the out-of-shelf or on-shelf product?
-- **Precision**: Did we make the correct observation?
+Feedback Loops for Out on Shelf improves detection accuracy by automatically managing which products should be reported to customers. The system tracks product-level detection accuracy and only reports high-confidence detections, building stronger trust in shelf availability insights.
 
-## How It Works
+### Key Benefits
 
-### Onboarding Process
+- **Accelerated Store Onboarding**: New stores can go live faster with intelligent audit routing
+- **Improved Detection Accuracy**: Only high-confidence detections reach customer reporting
+- **Automated Scene Approval**: Replaces manual review process during store calibration
+- **Faster CV Improvements**: Direct connection between user feedback and model retraining
 
-During store onboarding, we audit product-level detections to determine if they are confident detections. A product is considered "confident" when 3 out of 5 recent audits show accurate detections (no false positives or false negatives). We try to audit jobs that span different hours of the day to create a representative sample.
+## How It Works Behind the Scenes
 
-### Product Status Tracking
+### Confidence Status System
 
-We use 4 different statuses to track product detection accuracy:
+The system assigns each product a confidence status that determines reporting and audit routing:
 
 <AccordionGroup>
 <Accordion title="CONFIDENT">
@@ -25,10 +27,16 @@ We use 4 different statuses to track product detection accuracy:
   **Behavior**: Product detections bypass audit and go directly to reporting
 </Accordion>
 
+<Accordion title="REVIEW">
+  **Criteria**: Not enough audits, or no consistent pattern
+  
+  **Behavior**: Product is always audited, is_out_on_shelf set to null in reporting
+</Accordion>
+
 <Accordion title="LOW_PRECISION">
   **Criteria**: 3+ false positives (CV said OOS, but audit found it was actually on shelf)
   
-  **Behavior**: Product is always audited to ensure accuracy
+  **Behavior**: Product is always audited, is_out_on_shelf set to null in reporting
 </Accordion>
 
 <Accordion title="LOW_RECALL">
@@ -36,97 +44,60 @@ We use 4 different statuses to track product detection accuracy:
   
   **Behavior**: Product is always audited to ensure we don't miss detections
 </Accordion>
-
-<Accordion title="REVIEW">
-  **Criteria**: Not enough audits, or no consistent pattern
-  
-  **Behavior**: Product is always audited until a clear pattern emerges
-</Accordion>
 </AccordionGroup>
 
-### Continuous Learning
+### Workflow Process
 
-Throughout a store's active period, we get feedback about detections from users:
-
-- **User Flags False Positive**: If a user flags a false positive, that product flips from "confident" to "review"
-- **Status Recovery**: A product stays in "review" until we observe a pattern with recent detections (again, 3/5 jobs with accurate detections)
-- **Manual Updates**: Internal users can always update the status of a product by reviewing a job and updating the "PEM_STATUS" flag
-
-<Info>
-**Note**: The PEM_STATUS flag is a placeholder for screenshot - this is where internal users can manually adjust product confidence levels.
-</Info>
-
-## Required Services
-
-To enable Feedback Loops for Out on Shelf, these backend services must be activated:
-
-<CardGroup>
-<Card title="FEEDBACK_LOOPS_OOS_BASE" icon="database">
-  Initializes audit tracking per product/scene and stores audit outcomes used to compute accuracy trends.
-</Card>
-
-<Card title="FEEDBACK_LOOPS_AUTO_AUDIT" icon="automation">
-  Enables automatic routing of jobs with low-confidence products to the appropriate audit queue.
-</Card>
-
-<Card title="FEEDBACK_LOOPS_PRODUCTION" icon="settings">
-  Alters detection confidence flags before they reach the audit interface, converting high-confidence detections to bypass audit.
-</Card>
-</CardGroup>
-
-## Audit Workflow
-
-### Job Processing
-
-1. **Detection Evaluation**: Each product detection is evaluated against its current status
-2. **Confident Products**: Automatically bypass audit and go to reporting
-3. **Low-Confidence Products**: Routed to audit queue for human review
+1. **Detection Evaluation**: Each product detection is evaluated against its current confidence status
+2. **Confident Products**: Automatically bypass audit and go directly to reporting
+3. **Low-Confidence Products**: Routed to ADB audit queue for human review
 4. **Status Updates**: After audit, product statuses are re-evaluated based on the last 5 audit outcomes
-
-### Audit Queue Management
-
-- **Calibration Queue**: For stores tagged as "Calibration" - forces shelf-level audit view
-- **Standard Queue**: 
-  - If < 15 low-confidence products: detection-level audit (targeted)
-  - If ≥ 15 low-confidence products: shelf-level audit (batch)
-
-## Monitoring and Metrics
-
-### Key Performance Indicators
-
-<CardGroup>
-<Card title="% of Products Confident" icon="check">
-  Share of store products that have reached confident status
-  
-  **Target**: Increase over time as system learns
-</Card>
-
-<Card title="Audit Efficiency" icon="clock">
-  Time spent auditing vs. total detections processed
-  
-  **Target**: Decrease as more products become confident
-</Card>
-
-<Card title="False Positive Rate" icon="trending-down">
-  Rate of incorrect OOS detections
-  
-  **Target**: Decrease over time through learning
-</Card>
-</CardGroup>
-
-## Implementation Notes
-
-### Status Initialization
-
-- **Approved Scenes**: Products automatically marked as CONFIDENT
-- **Unapproved Scenes**: Products marked as REVIEW until proven accurate
-
-### Evaluation Window
-
-The default evaluation window is the last 5 audits. This threshold can be configured at the store/scene level in the future.
+5. **Reporting Suppression**: Products with LOW_PRECISION or REVIEW status have their is_out_on_shelf value set to null
 
 ### User Feedback Integration
 
-Customer-reported false positives will automatically adjust product statuses, with configurable sensitivity thresholds per customer or region.
+When store teams report false positives:
+- The system automatically updates the product's confidence status (CONFIDENT → REVIEW)
+- This triggers ADB audit queues for products requiring review
+- Once ADB audits enough samples, the system re-evaluates confidence status
+- CV team can access confidence statuses and job context through API endpoints for model retraining
+
+### Onboarding Options
+
+- **With PEM_OOS_REVIEW_BY_DEFAULT**: Every new product starts as REVIEW status, requiring ADB audit before reporting
+- **Without PEM_OOS_REVIEW_BY_DEFAULT**: Every product defaults to CONFIDENT status (desired for proven grocery formats)
+
+## How to Enable
+
+### Required Services
+
+<CardGroup>
+<Card title="PEM_OOS_REVIEW_BY_DEFAULT" icon="settings">
+  **Optional**: Initializes every new product to REVIEW status, suppressing it from reporting until proven accurate
+</Card>
+
+<Card title="PEM_AUTO_AUDIT" icon="automation">
+  Controls queuing jobs for ADB to audit based on product confidence statuses
+</Card>
+
+<Card title="PEM_PRODUCTION" icon="database">
+  References confidence status and sets is_out_on_shelf to null for low-confidence products
+</Card>
+</CardGroup>
+
+### Implementation Steps
+
+1. **Enable Services**: Add the required PEM services to your store configuration
+2. **Choose Onboarding Strategy**: Decide whether to default new products to REVIEW status
+3. **Train Teams**: Ensure store teams understand how to flag false positives
+4. **Monitor Performance**: Track confidence metrics and audit queue sizes
+
+### Monitoring
+
+<Card title="Key Metrics" icon="chart">
+  - **% of Products Confident**: Share of store products that have reached confident status
+  - **Audit Efficiency**: Time spent auditing vs. total detections processed
+  - **ADB Audit Queue Size**: Number of jobs queued for review
+</Card>
 
 [← Back to Feedback Loops Overview](/internal/services/feedback-loops/overview)

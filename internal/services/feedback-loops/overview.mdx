@@ -5,50 +5,109 @@ description: "Learn about Simbe's unified framework for catching, suppressing, a
 
 Feedback Loops is Simbe's unified framework for catching, suppressing, and resolving product-level data inaccuracies before they reach customer analytics. Feedback Loops uses an intelligent product-level audit workflow to accelerate store onboarding, reduce audit burden, and preserve trust in every metric we publish.
 
-Two specialized flows—Feedback Loops for Out-On-Shelf and Feedback Loops for Standard Price—extend this framework to our two primary data domains: standard price exceptions and out on shelf detections.
+Two specialized flows—Feedback Loops for Out on Shelf and Feedback Loops for Standard Price—extend this framework to our two primary data domains: shelf availability detections and standard price exceptions.
 
 ## What Are Feedback Loops?
 
-Feedback Loops create intelligent, automated workflows that learn from audits and customer feedback to continuously improve data quality. The system builds confidence in product-level detections by analyzing historical patterns over time.
+Feedback Loops create intelligent, automated workflows that learn from audits and customer feedback to continuously improve data quality. The system builds confidence in product-level detections by analyzing historical patterns over time and automatically routing low-confidence items for human review.
 
-The system maintains a running history of detection accuracy for each product, requiring multiple consistent observations (typically 3 out of 5 recent audits) before elevating a product to "confident" status. When customers report false positives, this feedback immediately triggers re-evaluation and can demote products to lower confidence levels. Product confidence is dynamic and adapts based on new information, creating a continuously improving system that builds on its past experiences.
+The system maintains a running history of detection accuracy for each product, requiring multiple consistent observations before elevating a product to "CONFIDENT" status. When customers report false positives, this feedback immediately triggers re-evaluation and can demote products to lower confidence levels. Product confidence is dynamic and adapts based on new information, creating a continuously improving system that builds on its past experiences.
+
+## System Flow Overview
+
+```mermaid
+flowchart TD
+    A[Computer Vision Detection] --> B{Product Confidence Status?}
+    
+    B -->|CONFIDENT| C[Direct to Reporting]
+    B -->|REVIEW/LOW_PRECISION/LOW_RECALL| D[Route to ADB Audit Queue]
+    
+    D --> E[Human Auditor Review]
+    E --> F[Update Product Confidence History]
+    
+    F --> G{Re-evaluate Confidence Status}
+    G -->|3+ Accurate in Last 5| H[Elevate to CONFIDENT]
+    G -->|3+ False Positives| I[Mark as LOW_PRECISION]
+    G -->|3+ False Negatives| J[Mark as LOW_RECALL]
+    G -->|Insufficient Data| K[Keep as REVIEW]
+    
+    H --> L[Future Detections Bypass Audit]
+    I --> M[Suppress from Reporting]
+    J --> N[Always Audit for Accuracy]
+    K --> O[Continue Auditing]
+    
+    P[Customer Feedback] --> Q[Immediate Status Update]
+    Q --> R[Trigger ADB Audit Queue]
+    R --> E
+    
+    S[CV Model Training] --> T[Access Confidence Data via API]
+    T --> U[Identify Problem Areas]
+    U --> V[Retrain Models]
+    V --> A
+    
+    style A fill:#e1f5fe
+    style C fill:#c8e6c9
+    style D fill:#fff3e0
+    style E fill:#f3e5f5
+    style H fill:#c8e6c9
+    style I fill:#ffcdd2
+    style J fill:#ffcdd2
+    style K fill:#fff3e0
+    style P fill:#e8f5e8
+    style S fill:#e3f2fd
+```
 
 ## Key Benefits
 
-- **Accelerated Onboarding**: New stores can go live faster with intelligent audit routing
-- **Reduced Manual Work**: Automated suppression of low-confidence detections
-- **Continuous Improvement**: System learns from corrections to improve future accuracy
+- **Accelerated Onboarding**: New stores can go live faster with intelligent audit routing and confidence-based reporting
+- **Reduced Manual Work**: Automated suppression of low-confidence detections and false positives
+- **Continuous Improvement**: System learns from corrections to improve future accuracy and CV model retraining
 - **Trusted Analytics**: Only high-confidence data reaches customer reporting
+- **Automated Audit Routing**: Direct connection between user feedback and ADB auditing processes
 
 ## How It Works
 
 ### 1. Detection & Flagging
 Computer vision systems detect potential issues (price mismatches, out-of-stock items) and flag them for review.
 
-### 2. Historical Confidence Assessment
-The system evaluates each detection against the product's historical performance, including past audit outcomes and customer feedback patterns.
+### 2. Confidence Status Assessment
+The system evaluates each detection against the product's historical performance, including past audit outcomes and customer feedback patterns. Products are assigned confidence statuses (CONFIDENT, REVIEW, LOW_PRECISION, LOW_RECALL) that determine reporting and audit routing.
 
-### 3. Intelligent Routing
-Based on confidence levels built from historical data, the system automatically routes low-confidence items to human auditors while allowing high-confidence detections to bypass review.
+### 3. Intelligent Routing & Suppression
+Based on confidence levels, the system automatically routes low-confidence items to human auditors while allowing high-confidence detections to bypass review. False positives are automatically suppressed from reporting.
 
 ### 4. Continuous Learning & Feedback Integration
-Every audit outcome and customer feedback is recorded and integrated into the product's confidence history, creating a continuously improving system that builds on its past experiences.
+Every audit outcome and customer feedback is recorded and integrated into the product's confidence history. The system automatically updates confidence statuses and triggers ADB audit queues for products requiring review.
+
+### 5. CV Model Improvement
+Confidence statuses and related job context (like fixture type) are made available to the CV team through API endpoints, enabling faster identification of problem areas and streamlined model retraining.
 
 ## Two Main Workflows
 
 ### [Feedback Loops for Out on Shelf](/internal/services/feedback-loops/out-on-shelf)
-Manages shelf availability detections by tracking product-level accuracy. Products start in "review" status during onboarding and graduate to "confident" status after demonstrating consistent accuracy (3/5 recent audits are accurate). The system continuously learns from user feedback and audit corrections to improve detection quality.
+Manages shelf availability detections by tracking product-level accuracy through a sophisticated confidence status system. Products can start in "REVIEW" status during onboarding (when PEM_OOS_REVIEW_BY_DEFAULT is enabled) and graduate to "CONFIDENT" status after demonstrating consistent accuracy. The system continuously learns from user feedback and audit corrections, automatically queuing jobs for ADB review and maintaining confidence status history.
 
 ### [Feedback Loops for Standard Price](/internal/services/feedback-loops/standard-price)
-Handles price discrepancy exceptions, enabling teams to suppress incorrect pricing data from reporting and analytics.
+Handles price discrepancy exceptions, enabling store teams to flag false positives directly in the mobile app or web-based task reports. When feedback is submitted, those items are automatically suppressed from future reporting, reducing alert fatigue and improving trust in pricing insights.
 
 ## Getting Started
 
 To use Feedback Loops in your stores:
 
 1. **Enable Services**: Add the appropriate Feedback Loops services to your store configuration
-2. **Train Your Team**: Ensure auditors understand the new workflow and tools
-3. **Monitor Performance**: Use the available dashboards to track system performance and improvements
+2. **Configure Confidence Settings**: Choose whether to default new products to REVIEW status during onboarding
+3. **Train Your Team**: Ensure store teams understand how to flag false positives and auditors understand the new workflow
+4. **Monitor Performance**: Use the available dashboards to track system performance and improvements
+
+## Required Services
+
+### Out on Shelf
+- **PEM_OOS_REVIEW_BY_DEFAULT** (optional): Initializes every new product to REVIEW status, suppressing it from reporting until proven accurate
+- **PEM_AUTO_AUDIT**: Controls queuing jobs for ADB to audit
+- **PEM_PRODUCTION**: References confidence status and sets is_out_on_shelf to null for low-confidence products
+
+### Standard Price
+- **PEM_PRICE**: Enables price exception workflows and false positive suppression
 
 ## Learn More
 

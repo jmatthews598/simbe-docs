@@ -24,7 +24,57 @@ Get your documentation site running locally and make your first customization.
   </Accordion>
 </AccordionGroup>
 
-### Step 2: Deploy your changes
+### Step 2: Git workflow
+
+<AccordionGroup>
+  <Accordion icon="code-branch" title="Clone the repository">
+    To get started with the documentation repository on your local machine:
+    
+    ```bash
+    # Clone the repository
+    git clone https://github.com/your-username/your-docs-repo.git
+    
+    # Navigate to the project directory
+    cd your-docs-repo
+    
+    # Check the current branch
+    git branch
+    ```
+  </Accordion>
+  <Accordion icon="code-merge" title="Make and commit changes">
+    When you're ready to make changes to your documentation:
+    
+    ```bash
+    # Create a new branch for your changes
+    git checkout -b feature/your-feature-name
+    
+    # Make your changes to the documentation files
+    # (edit .mdx files, add images, etc.)
+    
+    # Stage your changes
+    git add .
+    
+    # Commit your changes with a descriptive message
+    git commit -m "Add new documentation section"
+    
+    # Push your branch to the remote repository
+    git push origin feature/your-feature-name
+    ```
+  </Accordion>
+  <Accordion icon="github" title="Create a pull request">
+    After pushing your changes:
+    
+    1. Go to your GitHub repository
+    2. Click "Compare & pull request" for your branch
+    3. Add a description of your changes
+    4. Request review from team members if needed
+    5. Merge the pull request once approved
+    
+    <Tip>Use descriptive commit messages and pull request titles to help your team understand the changes.</Tip>
+  </Accordion>
+</AccordionGroup>
+
+### Step 3: Deploy your changes
 
 <AccordionGroup>
   <Accordion icon="github" title="Install our GitHub app">
@@ -44,7 +94,7 @@ Get your documentation site running locally and make your first customization.
   </Accordion>
 </AccordionGroup>
 
-### Step 3: Go live
+### Step 4: Go live
 
 <Accordion icon="rocket" title="Publish your docs">
   1. Commit and push your changes.

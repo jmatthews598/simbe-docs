@@ -1,15 +1,27 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "maple",
   "name": "Simbe",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#22AEB6",
+    "light": "#4BC5CC",
+    "dark": "#1A8B91"
   },
   "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
+      {
+        "tab": "Docs Home",
+        "icon": "house",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "index"
+            ]
+          }
+        ]
+      },
       {
         "tab": "API Reference",
         "icon": "code",
@@ -61,31 +73,6 @@
             ]
           }
         ]
-      },
-      {
-        "tab": "Internal",
-        "icon": "lock",
-        "groups": [
-          {
-            "group": "Getting started",
-            "pages": [
-              "overview"
-            ]
-          },
-          {
-            "group": "Services",
-            "pages": [
-              {
-                "group": "Feedback Loops",
-                "pages": [
-                  "internal/services/feedback-loops/overview",
-                  "internal/services/feedback-loops/out-on-shelf",
-                  "internal/services/feedback-loops/standard-price"
-                ]
-              }
-            ]
-          }
-        ]
       }
     ]
   },
@@ -102,8 +89,8 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "label": "Simbe.ai",
+      "href": "https://simbe.ai"
     }
   },
   "contextual": {

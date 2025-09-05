@@ -1,17 +1,30 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "maple",
   "name": "Simbe",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#22AEB6",
+    "light": "#4BC5CC",
+    "dark": "#1A8B91"
   },
   "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
       {
+        "tab": "Docs Home",
+        "icon": "house",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "index"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "API Reference",
+        "icon": "code",
         "groups": [
           {
             "group": "API Documentation",
@@ -20,11 +33,12 @@
             ]
           },
           {
-            "group": "Endpoint Examples",
+            "group": "Endpoints",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
+              "api-reference/endpoint/ping",
+              "api-reference/endpoint/store-upload",
+              "api-reference/endpoint/inventory-search",
+              "api-reference/endpoint/retailer-upload",
               "api-reference/endpoint/webhook"
             ]
           }
@@ -34,14 +48,6 @@
         "tab": "Guides",
         "icon": "lock",
         "groups": [
-          {
-            "group": "Getting started",
-            "pages": [
-              "index",
-              "quickstart",
-              "development"
-            ]
-          },
           {
             "group": "Customization",
             "pages": [
@@ -67,31 +73,6 @@
             ]
           }
         ]
-      },
-      {
-        "tab": "Internal",
-        "icon": "lock",
-        "groups": [
-          {
-            "group": "Getting started",
-            "pages": [
-              "overview"
-            ]
-          },
-          {
-            "group": "Services",
-            "pages": [
-              {
-                "group": "Feedback Loops",
-                "pages": [
-                  "internal/services/feedback-loops/overview",
-                  "internal/services/feedback-loops/out-on-shelf",
-                  "internal/services/feedback-loops/standard-price"
-                ]
-              }
-            ]
-          }
-        ]
       }
     ]
   },
@@ -108,8 +89,8 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "label": "Simbe.ai",
+      "href": "https://simbe.ai"
     }
   },
   "contextual": {
@@ -129,6 +110,17 @@
       "x": "https://x.com/mintlify",
       "github": "https://github.com/mintlify",
       "linkedin": "https://linkedin.com/company/mintlify"
+    }
+  },
+  "openapi": "api-reference/openapi.json",
+  "api": {
+    "playground": {
+      "display": "simple",
+      "proxy": true
+    },
+    "examples": {
+      "languages": ["curl", "python", "javascript", "node"],
+      "defaults": "required"
     }
   }
 }

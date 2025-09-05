@@ -1,94 +1,976 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
+    "title": "Simbe Cloud Partner API",
+    "version": "1.0.0",
+    "description": "The Simbe Cloud Partner API enables retailers and integration partners to exchange product, retail, and inventory data with Simbe's AI-powered retail intelligence platform. This comprehensive API supports two-way data exchange, real-time inventory insights, and automated store operations.\n\n## Key Capabilities\n\n**Data Ingestion**\n- Upload product catalogs, pricing, and sales data at store or retailer level\n- Support for both real-time API uploads and batch SFTP processing\n- Comprehensive data validation and quality assurance\n\n**Inventory Intelligence**\n- Real-time inventory search with 50+ filtering options\n- Out-of-stock detection and shelf analytics\n- Price verification and promotional compliance monitoring\n- RFID and barcode scanning integration\n\n**Real-Time Notifications**\n- Webhook-based event notifications for scan completions\n- Immediate access to updated inventory data\n- Configurable alerting for critical events\n\n**Security & Reliability**\n- JWT-based authentication with single-use tokens\n- HTTPS-only communication with comprehensive error handling\n- Rate limiting and request validation\n- Audit logging and compliance support\n\n## Integration Support\n\nThis API is designed for enterprise integration with:\n- Retail management systems (RMS)\n- Point of sale (POS) systems\n- Inventory management platforms\n- Business intelligence tools\n- Custom retail applications\n\nFor technical support, integration assistance, or API access, contact our partner success team.",
+    "contact": {
+      "name": "Simbe Partner Success",
+      "email": "partners@simbe.ai",
+      "url": "https://simbe.ai/partners"
     },
-    "version": "1.0.0"
+    "license": {
+      "name": "Proprietary",
+      "url": "https://simbe.ai/terms"
+    }
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "url": "https://api.simbe.ai",
+      "description": "Production"
     }
   ],
   "security": [
     {
-      "bearerAuth": []
+      "BearerJWT": []
     }
   ],
-  "paths": {
-    "/plants": {
-      "get": {
-        "description": "Returns all plants from the system that the user has access to",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "The maximum number of results to return",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
-                  }
-                }
-              }
-            }
+  "components": {
+    "securitySchemes": {
+      "BearerJWT": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JSON Web Token (HS256) signed per request. Each token is single-use and must be generated for each API call.\n\n**Header:** `Authorization: Bearer <token>`\n\n**JWT Structure:**\n- **Header:** `{ \"typ\": \"JWT\", \"alg\": \"HS256\" }`\n- **Payload:** `{ \"client\": \"<client-id>\", \"timestamp\": <unix-epoch>, \"path\": \"<request-path>\" }`\n\n**Requirements:**\n- Token must be signed with your client secret using HS256\n- Timestamp tolerance: ±100 seconds\n- Path must match the exact request path (e.g., `/api/v1/client/ping`)\n- Token expires after single use"
+      }
+    },
+    "schemas": {
+      "JWTPayload": {
+        "type": "object",
+        "description": "JWT payload structure for authentication",
+        "properties": {
+          "client": {
+            "type": "string",
+            "description": "Client ID provided by Simbe",
+            "example": "your-client-id"
           },
-          "400": {
-            "description": "Unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "description": "Creates a new plant in the store",
-        "requestBody": {
-          "description": "Plant to add to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
+          "timestamp": {
+            "type": "integer",
+            "description": "Unix epoch seconds of the request (tolerance: ±100 seconds)",
+            "example": 1640995200
           },
-          "required": true
+          "path": {
+            "type": "string",
+            "description": "Exact request path (e.g., /api/v1/client/ping)",
+            "example": "/api/v1/client/ping"
+          }
         },
+        "required": ["client", "timestamp", "path"],
+        "additionalProperties": false
+      },
+      "PingResponse": {
+        "type": "object",
+        "description": "Successful ping response indicating API connectivity and authentication",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["ok"],
+            "description": "Service status indicator",
+            "example": "ok"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Server timestamp of the response",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "version": {
+            "type": "string",
+            "description": "API version",
+            "example": "1.0.0"
+          },
+          "client_id": {
+            "type": "string",
+            "description": "Authenticated client identifier",
+            "example": "client_12345"
+          }
+        },
+        "required": ["status"],
+        "additionalProperties": true
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "description": "Standard error response format",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error code identifier",
+            "example": "invalid_request"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable error message",
+            "example": "Invalid request format"
+          },
+          "code": {
+            "type": "integer",
+            "description": "HTTP status code",
+            "example": 400
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional error details",
+            "additionalProperties": true
+          },
+          "retry_after": {
+            "type": "integer",
+            "description": "Seconds to wait before retrying (for rate limit errors)",
+            "example": 60
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Unique request identifier for support",
+            "example": "req_abc123def456"
+          }
+        },
+        "required": ["error", "message", "code"]
+      },
+      "DataInputItem": {
+        "type": "object",
+        "description": "Product data item for upload to Simbe's inventory system",
+        "properties": {
+          "store": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Include only when using retailer-level upload"
+          },
+          "upc": {
+            "type": [
+              "string",
+              "integer"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Expected price as string (e.g., '12.34')"
+          },
+          "quantity": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "maximum": 32767
+          },
+          "is_promo": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "promo_price": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "promo_quantity": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "stock": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "identifier": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "department": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "category": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "subcategory": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "case_pack": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "price_effective_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "promo_effective_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "is_dsd": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "movement": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "revenue": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "parent_identifier": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "is_important": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "brand": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "manufacturer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "vendor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "price_ending_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "promo_ending_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "warehouse": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "movement_hourly": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "integer"
+            }
+          },
+          "revenue_hourly": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "number"
+            }
+          },
+          "aisle": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "segment": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "shelf": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "slot": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "facings": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "upc",
+          "description",
+          "price",
+          "quantity",
+          "is_promo",
+          "promo_price",
+          "promo_quantity",
+          "stock"
+        ],
+        "additionalProperties": true,
+        "examples": [
+          {
+            "summary": "Complete product data example",
+            "description": "A comprehensive product data item with all available fields",
+            "value": {
+              "store": "012345678901",
+              "upc": "012345678901",
+              "description": "Pop-Tarts Strawberry 4 Pack",
+              "identifier": "12345678",
+              "parent_identifier": "123456",
+              "department": "Grocery",
+              "category": "Breakfast",
+              "subcategory": "Kids",
+              "brand": "Pop-Tarts",
+              "manufacturer": "The Kellogg Company",
+              "is_important": true,
+              "price": "2.99",
+              "price_effective_at": "2025-08-01 00:00:00",
+              "price_ending_at": null,
+              "quantity": 1,
+              "is_promo": true,
+              "promo_price": "1.99",
+              "promo_quantity": 1,
+              "promo_effective_at": "2025-08-10 00:00:00",
+              "promo_ending_at": "2025-08-15 23:59:59",
+              "status": "active",
+              "stock": 30,
+              "warehouse": 145,
+              "is_dsd": false,
+              "vendor": "Kelloggs Distribution Inc",
+              "aisle": "1A",
+              "segment": 2,
+              "shelf": 3,
+              "slot": 4,
+              "facings": 5,
+              "date": "2025-08-19",
+              "movement": 12,
+              "movement_hourly": [1, 2, 0, 0, 3, 1, 5],
+              "revenue": 35.88,
+              "revenue_hourly": [2.99, 5.98, 0, 0, 8.97, 2.99, 14.95]
+            }
+          },
+          {
+            "summary": "Minimal required fields",
+            "description": "Minimum required fields for a basic product upload",
+            "value": {
+              "upc": "012345678901",
+              "description": "Pop-Tarts Strawberry 4 Pack",
+              "price": "2.99",
+              "quantity": 1,
+              "is_promo": false,
+              "promo_price": null,
+              "promo_quantity": null,
+              "stock": 30
+            }
+          }
+        ]
+      },
+      "UploadResponse": {
+        "type": "object",
+        "description": "Response confirming successful data upload and processing status",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["accepted", "processing", "completed", "failed"],
+            "description": "Upload processing status",
+            "example": "accepted"
+          },
+          "is_qa": {
+            "type": "boolean",
+            "description": "Indicates if this was a QA validation request (no actual processing)",
+            "example": false
+          },
+          "received": {
+            "type": "integer",
+            "description": "Number of records successfully received",
+            "example": 150
+          },
+          "processed": {
+            "type": "integer",
+            "description": "Number of records successfully processed",
+            "example": 148
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of validation or processing errors",
+            "example": ["Invalid UPC format for record 5", "Missing required field 'price' for record 12"]
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of non-critical warnings",
+            "example": ["Price format warning for record 3"]
+          },
+          "upload_id": {
+            "type": "string",
+            "description": "Unique identifier for this upload batch",
+            "example": "upload_abc123def456"
+          },
+          "estimated_processing_time": {
+            "type": "integer",
+            "description": "Estimated processing time in seconds",
+            "example": 300
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Server timestamp when upload was received",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        },
+        "required": ["status", "received"],
+        "additionalProperties": true
+      },
+      "InventoryRecord": {
+        "type": "object",
+        "description": "Individual inventory record with comprehensive product and scan data",
+        "properties": {
+          "upc": {
+            "type": "string",
+            "description": "Universal product identifier"
+          },
+          "utc_taken_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC datetime when the inventory was recorded"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "External identifier - usually a one-to-one relationship with a UPC"
+          },
+          "parent_identifier": {
+            "type": "string",
+            "description": "External parent_identifier - usually a one-to-many relationship with multiple UPCs"
+          },
+          "description": {
+            "type": "string",
+            "description": "Product name or description"
+          },
+          "is_important": {
+            "type": "boolean",
+            "description": "Product importance flag (product should remain stocked)"
+          },
+          "is_dsd": {
+            "type": "boolean",
+            "description": "Direct store delivery flag"
+          },
+          "classification": {
+            "type": "object",
+            "description": "Product hierarchy",
+            "properties": {
+              "dept": {"type": "string"},
+              "category": {"type": "string"},
+              "subcategory": {"type": "string"}
+            }
+          },
+          "hierarchy": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Product hierarchy"
+          },
+          "vendor": {
+            "type": "string",
+            "description": "Vendor name"
+          },
+          "is_out_on_shelf": {
+            "type": "boolean",
+            "description": "True if the product was detected to be out-on-shelf; i.e. facings=0"
+          },
+          "is_back_on_shelf": {
+            "type": "boolean",
+            "description": "True if the product was previously detected to be out-on-shelf"
+          },
+          "is_out_at_location": {
+            "type": "boolean",
+            "description": "True if the product was detected to be out-at-location; i.e. all records with the same UPC and location during this traversal have facings=0"
+          },
+          "is_back_at_location": {
+            "type": "boolean",
+            "description": "True if the product was previously detected to be out-at-location"
+          },
+          "taken_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Datetime when the inventory was recorded"
+          },
+          "store": {
+            "type": "string",
+            "description": "External store identifier"
+          },
+          "segment": {
+            "type": "integer",
+            "description": "Computed aisle segment"
+          },
+          "shelf": {
+            "type": "integer",
+            "description": "Shelf"
+          },
+          "slot": {
+            "type": "integer",
+            "description": "Slot value"
+          },
+          "level": {
+            "type": "integer",
+            "description": "Shelves level: 0 - merchandise shelves, 1 - first level over merchandise shelves, 2 - second level over merchandise shelves"
+          },
+          "is_rfid": {
+            "type": "boolean",
+            "description": "True if scanned using RFID"
+          },
+          "price": {
+            "type": "string",
+            "description": "Scanned price"
+          },
+          "price_expected": {
+            "type": "string",
+            "description": "Expected price"
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "Scanned quantity"
+          },
+          "quantity_expected": {
+            "type": "integer",
+            "description": "Expected quantity"
+          },
+          "is_price_off": {
+            "type": "boolean",
+            "description": "True when the detected price doesn't match the expected price"
+          },
+          "is_promo": {
+            "type": "boolean",
+            "description": "True when a promotion tag was detected"
+          },
+          "is_promo_expected": {
+            "type": "boolean",
+            "description": "True when a promotion tag was expected"
+          },
+          "promo_price": {
+            "type": "string",
+            "description": "Scanned promotion price"
+          },
+          "promo_price_expected": {
+            "type": "string",
+            "description": "Expected promotion price"
+          },
+          "promo_quantity": {
+            "type": "integer",
+            "description": "Scanned promotion quantity"
+          },
+          "promo_quantity_expected": {
+            "type": "integer",
+            "description": "Expected promotion quantity"
+          },
+          "is_promo_price_off": {
+            "type": "boolean",
+            "description": "True when the detected promotion price doesn't equal the expected promotion price"
+          },
+          "is_promo_missing": {
+            "type": "boolean",
+            "description": "True when a promotion tag was expected but none was detected"
+          },
+          "is_promo_expired": {
+            "type": "boolean",
+            "description": "True when a promotion tag was detected after the promotion price has expired"
+          },
+          "has_bib": {
+            "type": "boolean",
+            "description": "True if a bib was detected"
+          },
+          "facings": {
+            "type": "integer",
+            "description": "Number of products detected"
+          },
+          "facings_x": {
+            "type": "integer",
+            "description": "Number of product slots detected"
+          },
+          "stock": {
+            "type": "integer",
+            "description": "Balance on hand at the store"
+          },
+          "warehouse": {
+            "type": "integer",
+            "description": "Available stock at the warehouse"
+          },
+          "out_on_shelf_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Datetime of the previous out-on-shelf detection when is_back_on_shelf=true"
+          },
+          "out_at_location_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Datetime of the previous out-at-location detection when is_back_at_location=true"
+          },
+          "scene_id": {
+            "type": "string",
+            "description": "Internal scene name"
+          },
+          "scene_uid": {
+            "type": "integer",
+            "description": "Internal scene identifier"
+          },
+          "area": {
+            "type": "string",
+            "description": "Area description"
+          },
+          "aisle": {
+            "type": "string",
+            "description": "Aisle name"
+          },
+          "dept": {
+            "type": "string",
+            "description": "Department name"
+          },
+          "zone": {
+            "type": "string",
+            "description": "Zone name"
+          },
+          "tag_class": {
+            "type": "string",
+            "description": "Tag classification description"
+          },
+          "promo_tag_class": {
+            "type": "string",
+            "description": "Promotion tag classification description"
+          },
+          "store_id": {
+            "type": "integer",
+            "description": "Internal store identifier"
+          },
+          "product_id": {
+            "type": "string",
+            "description": "Internal product identifier"
+          }
+        },
+        "additionalProperties": true
+      },
+      "InventoryResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InventoryRecord"
+            },
+            "description": "Products array"
+          },
+          "more": {
+            "type": "boolean",
+            "description": "True if there are more results available for the original filters"
+          },
+          "next_page_token": {
+            "type": "string",
+            "description": "Pagination token; include in the next query to get the next set of results"
+          },
+          "total": {
+            "type": "integer",
+            "description": "Response data length"
+          },
+          "v": {
+            "type": "string",
+            "description": "Simbe Cloud API version"
+          }
+        },
+        "required": ["data", "more", "total", "v"]
+      },
+      "WebhookSceneCompleted": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "SCENE_COMPLETED"
+            ]
+          },
+          "aisle": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "store": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "scene_id": {
+            "type": "string"
+          },
+          "traversal": {
+            "type": "string"
+          },
+          "traversed_at": {
+            "type": "string"
+          },
+          "scanned_at": {
+            "type": "string"
+          },
+          "inventory_uri": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "store",
+          "locale",
+          "scene_id",
+          "traversal",
+          "traversed_at",
+          "scanned_at",
+          "inventory_uri"
+        ],
+        "additionalProperties": true,
+        "examples": [
+          {
+            "id": "0ecaf673-2845-47bb-bbbf-2a22caaceea9",
+            "type": "SCENE_COMPLETED",
+            "aisle": "GROCERY 1B",
+            "store": "1",
+            "locale": "Simbe Mart",
+            "scene_id": "GROCERY 1A - 3",
+            "traversal": "2021-06-18 10:00:00",
+            "traversed_at": "2021-06-18 10:00:00",
+            "scanned_at": "2021-06-18 12:34:56",
+            "inventory_uri": "/api/v1/client/stores/simbe.1/data/inventory?scanned_at=2021-06-18%2012:34:56&scene_id=GROCERY%201A%20-%203"
+          }
+        ]
+      },
+      "WebhookTraversalCompleted": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "TRAVERSAL_COMPLETED"
+            ]
+          },
+          "store": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "coverage": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "traversal": {
+            "type": "string"
+          },
+          "traversed_at": {
+            "type": "string"
+          },
+          "location_tags": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "inventory_uri": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "store",
+          "locale",
+          "traversal",
+          "traversed_at",
+          "inventory_uri"
+        ],
+        "additionalProperties": true,
+        "examples": [
+          {
+            "id": "0ecaf673-2845-47bb-bbbf-2a22caaceea9",
+            "type": "TRAVERSAL_COMPLETED",
+            "store": "1",
+            "locale": "Simbe Mart",
+            "coverage": null,
+            "traversal": "2021-06-18 10:00:00",
+            "traversed_at": "2021-06-18 10:00:00",
+            "location_tags": null,
+            "inventory_uri": "/api/v1/client/stores/simbe.1/data/inventory?traversed_at=2021-06-18%2010:00:00"
+          }
+        ]
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/client/ping": {
+      "get": {
+        "summary": "Ping (connectivity & auth test)",
+        "description": "Test API connectivity and verify JWT authentication. Use this endpoint to ensure your authentication setup is working correctly.",
+        "operationId": "ping",
+        "tags": ["Authentication"],
         "responses": {
           "200": {
-            "description": "plant response",
+            "description": "Service reachable and JWT authentication successful",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Plant"
+                  "$ref": "#/components/schemas/PingResponse"
+                },
+                "example": {
+                  "status": "ok",
+                  "timestamp": "2024-01-15T10:30:00Z",
+                  "version": "1.0.0"
                 }
               }
             }
           },
           "400": {
-            "description": "unexpected error",
+            "description": "Bad Request - Invalid request format or parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "invalid_request",
+                  "message": "Invalid request format",
+                  "code": 400
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing, invalid, or expired JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "unauthorized",
+                  "message": "Invalid or expired JWT token",
+                  "code": 401
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - JWT valid but insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "forbidden",
+                  "message": "Insufficient permissions for this operation",
+                  "code": 403
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "rate_limit_exceeded",
+                  "message": "Rate limit exceeded. Please retry after 60 seconds",
+                  "code": 429,
+                  "retry_after": 60
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "internal_error",
+                  "message": "An unexpected error occurred. Please try again later",
+                  "code": 500
                 }
               }
             }
@@ -96,122 +978,815 @@
         }
       }
     },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
+    "/api/v1/client/stores/{retailer_slug_store_identifier}/data/upload": {
+      "post": {
+        "summary": "Store-level data upload",
+        "description": "Upload product, retail, and sales data for a specific store. Use this endpoint when you have store-specific data to submit to Simbe.",
+        "operationId": "uploadStoreData",
+        "tags": ["Data Upload"],
         "parameters": [
           {
-            "name": "id",
+            "name": "retailer_slug_store_identifier",
             "in": "path",
-            "description": "ID of plant to delete",
             "required": true,
+            "description": "Retailer slug and store identifier (e.g., `simbe.1`)",
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string"
+            }
+          },
+          {
+            "name": "is_qa",
+            "in": "query",
+            "required": false,
+            "description": "Validate only (do not process). Default: false",
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           }
         ],
-        "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
-          },
-          "400": {
-            "description": "unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DataInputItem"
                 }
               }
             }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted for processing (or validated in QA mode).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v1/client/retailers/{retailer_slug}/data/upload": {
+      "post": {
+        "summary": "Retailer-level data upload",
+        "description": "Upload product, retail, and sales data at the retailer level. Use this endpoint when you have retailer-wide data that applies to multiple stores.",
+        "operationId": "uploadRetailerData",
+        "tags": ["Data Upload"],
+        "parameters": [
+          {
+            "name": "retailer_slug",
+            "in": "path",
+            "required": true,
+            "description": "Retailer's unique identifier within Simbe",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "is_qa",
+            "in": "query",
+            "required": false,
+            "description": "Validate only (do not process). Default: false",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DataInputItem"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted for processing (or validated in QA mode).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v1/client/stores/{retailer_slug_store_identifier}/data/inventory": {
+      "get": {
+        "summary": "Search store inventory",
+        "description": "Retrieve inventory records and scan data from a specific store. Supports filtering by time range, UPC, stock levels, and more. Results can be enriched with additional data like barcodes and price tags.",
+        "operationId": "getStoreInventory",
+        "tags": ["Inventory Search"],
+        "parameters": [
+          {
+            "name": "retailer_slug_store_identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Store locale identifier (e.g., `simbe.1`)"
+          },
+          {
+            "name": "barcodes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Include barcodes data with the results"
+          },
+          {
+            "name": "retails",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Include retail data with the results (alias: `retail`)"
+          },
+          {
+            "name": "retail",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Alias for `retails`"
+          },
+          {
+            "name": "pricetags",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Include pricetag resource links with the results"
+          },
+          {
+            "name": "links",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Include _links that contain resource URLs to related endpoints"
+          },
+          {
+            "name": "job",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Include job data with the results"
+          },
+          {
+            "name": "location_tag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Include location tag data with the results"
+          },
+          {
+            "name": "layout",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Include the layout section with the results"
+          },
+          {
+            "name": "group_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["latest"]
+            },
+            "description": "Options: latest - return inventory of the most recent scanned products per location"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Inventory inclusive taken_at date and time; i.e. same or after (Default: start of latest COMPLETED traversal)"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Inventory exclusive taken_at date and time; i.e. before (Default: end of latest COMPLETED traversal)"
+          },
+          {
+            "name": "traversed_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Inventory for a specific traversal; specify a traversal's started_at time or latest for the most recent completed traversal (Default: latest)"
+          },
+          {
+            "name": "scanned_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Inventory taken_at datetime filter with a +/- 1 second window; recommended to be used along with SCENE_COMPLETED"
+          },
+          {
+            "name": "out_on_shelf",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Inventory is_out_on_shelf filter; i.e. inventory records where is_out_on_shelf=true and facings=0 (alias: `oos`)"
+          },
+          {
+            "name": "oos",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Alias for `out_on_shelf`"
+          },
+          {
+            "name": "back_on_shelf",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Inventory back_on_shelf filter; i.e. inventory records that were previously flagged as out-on-shelf but are not out-on-shelf currently (alias: `bos`)"
+          },
+          {
+            "name": "bos",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Alias for `back_on_shelf`"
+          },
+          {
+            "name": "out_back_on_shelf",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Return inventory recently out or back on shelf; i.e. match any of the following filters: back_on_shelf=true, out_on_shelf=true (alias: `obos`)"
+          },
+          {
+            "name": "obos",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Alias for `out_back_on_shelf`"
+          },
+          {
+            "name": "out_on_shelf_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Inventory out_on_shelf_at datetime filter"
+          },
+          {
+            "name": "out_at_location",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Inventory is_out_at_location filter; i.e. inventory records with the same UPC in the same location (scene_uid) where facings=0 (alias: `oal`)"
+          },
+          {
+            "name": "oal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Alias for `out_at_location`"
+          },
+          {
+            "name": "back_at_location",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Inventory back_at_location filter; i.e. inventory records that were previously flagged as out-at-location but are not out-at-location currently (alias: `bal`)"
+          },
+          {
+            "name": "bal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Alias for `back_at_location`"
+          },
+          {
+            "name": "out_back_at_location",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Return inventory recently out or back on shelf; i.e. match any of the following filters: back_at_location=true, out_at_location=true (alias: `obal`)"
+          },
+          {
+            "name": "obal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Alias for `out_back_at_location`"
+          },
+          {
+            "name": "out_at_location_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Inventory out_at_location_at datetime filter"
+          },
+          {
+            "name": "facings",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Inventory facings filter"
+          },
+          {
+            "name": "has_bib",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Inventory has_bib filter"
+          },
+          {
+            "name": "is_dsd",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Inventory is_dsd filter"
+          },
+          {
+            "name": "is_promo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Inventory is_promo filter"
+          },
+          {
+            "name": "is_price_off",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Inventory is_price_off filter"
+          },
+          {
+            "name": "is_promo_expired",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Inventory is_promo_expired filter"
+          },
+          {
+            "name": "is_promo_missing",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Inventory is_promo_missing filter"
+          },
+          {
+            "name": "is_promo_price_off",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Inventory is_promo_price_off filter"
+          },
+          {
+            "name": "discrepancy",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Return inventory with discrepancies; i.e. match any of the following filters: is_price_off=true, is_promo_price_off=true, is_promo_missing=true, is_promo_expired=true"
+          },
+          {
+            "name": "is_rfid",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Inventory is_rfid filter"
+          },
+          {
+            "name": "is_tag_recovered",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Inventory is_tag_recovered filter"
+          },
+          {
+            "name": "promo_quantity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Inventory promo_quantity filter"
+          },
+          {
+            "name": "quantity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Inventory quantity filter"
+          },
+          {
+            "name": "segment",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Inventory segment filter"
+          },
+          {
+            "name": "shelf",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Inventory shelf filter"
+          },
+          {
+            "name": "level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Inventory level filter"
+          },
+          {
+            "name": "stock",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Inventory stock filter"
+          },
+          {
+            "name": "taken_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Inventory taken_at datetime filter"
+          },
+          {
+            "name": "upc",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Inventory UPC filter (supports a comma-separated list: upc=0001234567891,0001234567892,0001234567893)"
+          },
+          {
+            "name": "vendor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Inventory vendor filter"
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Product description filter (alias: `name`)"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Alias for `description`"
+          },
+          {
+            "name": "identifier",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Product identifier filter"
+          },
+          {
+            "name": "parent_identifier",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Product parent_identifier filter"
+          },
+          {
+            "name": "is_important",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Product is_important filter"
+          },
+          {
+            "name": "aisle",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Scene aisle filter"
+          },
+          {
+            "name": "dept",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Scene dept filter"
+          },
+          {
+            "name": "scene_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Scene scene_id filter"
+          },
+          {
+            "name": "scene_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Scene scene_name filter"
+          },
+          {
+            "name": "next_page_token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Pagination token returned with the previous search results to get the next set of results"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100000,
+              "maximum": 100000
+            },
+            "description": "Limit the number of results (Default: 100,000)(Max: 100,000)"
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["json", "csv"],
+              "default": "json"
+            },
+            "description": "Response format: json (Default), csv"
+          },
+          {
+            "name": "columns",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated list of keys to map to CSV columns when format=csv; e.g. columns=upc,store,is_out_on_shelf"
+          },
+          {
+            "name": "headers",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated list of CSV headers when format=csv; e.g. headers=UPC,Store Identifier,Out On Shelf"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Inventory records for the specified store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryResponse"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
           }
         }
       }
     }
   },
   "webhooks": {
-    "/plant/webhook": {
+    "sceneCompleted": {
       "post": {
-        "description": "Information about a new plant added to the store",
+        "summary": "SCENE_COMPLETED notification",
+        "description": "Simbe \u2192 Partner webhook fired each time a scene is scanned/processed. This webhook provides immediate notification when individual scenes are completed, allowing partners to fetch updated inventory data in real-time.",
+        "tags": ["Webhooks"],
+        "security": [
+          {
+            "BasicAuth": []
+          }
+        ],
         "requestBody": {
-          "description": "Plant added to the store",
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewPlant"
+                "$ref": "#/components/schemas/WebhookSceneCompleted"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
+            "description": "Acknowledged"
+          },
+          "4XX": {
+            "description": "Client error"
+          },
+          "5XX": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "traversalCompleted": {
+      "post": {
+        "summary": "TRAVERSAL_COMPLETED notification",
+        "description": "Simbe \u2192 Partner webhook fired once per traversal when all scenes are completed. This webhook provides notification when an entire store traversal is finished, allowing partners to fetch complete inventory data for the store.",
+        "tags": ["Webhooks"],
+        "security": [
+          {
+            "BasicAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookTraversalCompleted"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          },
+          "4XX": {
+            "description": "Client error"
+          },
+          "5XX": {
+            "description": "Server error"
           }
         }
       }
     }
   },
-  "components": {
-    "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
-          },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
-          }
-        }
-      },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
-          },
-          {
-            "required": [
-              "id"
-            ],
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
-              }
-            }
-          }
-        ]
-      },
-      "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "message": {
-            "type": "string"
-          }
-        }
-      }
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "Connectivity testing and authentication verification"
     },
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
-      }
+    {
+      "name": "Data Upload",
+      "description": "Upload product, retail, and sales data to Simbe"
+    },
+    {
+      "name": "Inventory Search",
+      "description": "Retrieve inventory records and scan data from Simbe"
+    },
+    {
+      "name": "Webhooks",
+      "description": "Real-time event notifications for scan completions"
     }
-  }
+  ]
 }

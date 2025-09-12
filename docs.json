@@ -13,6 +13,7 @@
       {
         "tab": "Docs Home",
         "icon": "house",
+        "hidden": true,
         "groups": [
           {
             "group": "Getting Started",
@@ -26,12 +27,6 @@
         "tab": "API Reference",
         "icon": "code",
         "groups": [
-          {
-            "group": "API Documentation",
-            "pages": [
-              "api-reference/introduction"
-            ]
-          },
           {
             "group": "Endpoints",
             "pages": [
@@ -47,6 +42,7 @@
       {
         "tab": "Guides",
         "icon": "lock",
+        "hidden": true,
         "groups": [
           {
             "group": "Customization",

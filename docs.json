@@ -13,74 +13,11 @@
       {
         "tab": "Docs Home",
         "icon": "house",
-        "hidden": true,
         "groups": [
           {
             "group": "Getting Started",
             "pages": [
               "index"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API Reference",
-        "icon": "code",
-        "groups": [
-          {
-            "group": "Authentication Testing",
-            "pages": [
-              "api-reference/endpoint/ping"
-            ]
-          },
-          {
-            "group": "Data Ingestion",
-            "pages": [
-              "api-reference/endpoint/store-upload",
-              "api-reference/endpoint/retailer-upload"
-            ]
-          },
-          {
-            "group": "Inventory",
-            "pages": [
-              "api-reference/endpoint/inventory-search"
-            ]
-          },
-          {
-            "group": "Tasks",
-            "pages": [
-              "api-reference/endpoint/tasks"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Guides",
-        "icon": "lock",
-        "hidden": true,
-        "groups": [
-          {
-            "group": "Customization",
-            "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
             ]
           }
         ]

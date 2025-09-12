@@ -28,13 +28,28 @@
         "icon": "code",
         "groups": [
           {
-            "group": "Endpoints",
+            "group": "Authentication Testing",
             "pages": [
-              "api-reference/endpoint/ping",
+              "api-reference/endpoint/ping"
+            ]
+          },
+          {
+            "group": "Data Ingestion",
+            "pages": [
               "api-reference/endpoint/store-upload",
-              "api-reference/endpoint/inventory-search",
-              "api-reference/endpoint/retailer-upload",
-              "api-reference/endpoint/webhook"
+              "api-reference/endpoint/retailer-upload"
+            ]
+          },
+          {
+            "group": "Inventory",
+            "pages": [
+              "api-reference/endpoint/inventory-search"
+            ]
+          },
+          {
+            "group": "Tasks",
+            "pages": [
+              "api-reference/endpoint/tasks"
             ]
           }
         ]
